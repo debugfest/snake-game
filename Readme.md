@@ -49,7 +49,7 @@ A modern, interactive Snake Game built with Vite, featuring smooth animations, r
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/contrifest/snake-game.git
+git clone <YOUR_URL>
 cd snake-game
 ```
 
@@ -195,7 +195,7 @@ Customize appearance in `src/css/style.css`:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions! 
 
 ### Ways to Contribute
 - 🎮 **Game Features**: Power-ups, obstacles, multiplayer modes
@@ -214,23 +214,6 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 6. Commit with descriptive messages
 7. Push and create Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Authors
-
-**Maintainers:**
-- [@YourUsername](https://github.com/YourUsername) - Lead Developer
-- [@Contributor1](https://github.com/Contributor1) - Game Designer
-- [@Contributor2](https://github.com/Contributor2) - UI/UX Developer
-
-## 🙋‍♀️ Support & Community
-
-- 🐛 [Report Bugs](https://github.com/contrifest/snake-game/issues/new?template=bug_report.md)
-- 💡 [Request Features](https://github.com/contrifest/snake-game/issues/new?template=feature_request.md)
-- 💬 [Join Discussions](https://github.com/contrifest/snake-game/discussions)
-- 📧 Contact: [Open an Issue](https://github.com/contrifest/snake-game/issues)
 
 ## 🏆 Acknowledgments
 
@@ -249,5 +232,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Made with ❤️ 
 
 **🐍 Enjoy the classic Snake experience! 🎮**
+
 
 </div>
