@@ -35,6 +35,63 @@ export const useSnakeGame = () => {
   });
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.IDLE);
 
+
+  const [touchStart, setTouchStart] = useState<Position | null>(null);
+  
+  const handleTouchStart = (e: TouchEvent) => {
+        // Prevent screen scrolling when swiping
+        e.preventDefault();
+        setTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  };
+
+  // Start new game
+  const startGame = useCallback(() => {
+    const initialSnake = getInitialSnake();
+    setSnake(initialSnake);
+    setDirection(Direction.RIGHT);
+    setNextDirection(Direction.RIGHT);
+    setFood(generateFoodPosition(initialSnake));
+    setScore(0);
+    setGameStatus(GameStatus.PLAYING);
+  }, []);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+        if(gameStatus === GameStatus.IDLE || gameStatus === GameStatus.GAME_OVER){
+          startGame();
+          setTouchStart(null);
+          return;
+        }
+        if (!touchStart || gameStatus !== GameStatus.PLAYING) return;
+
+        const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        
+        const dx = touchEnd.x - touchStart.x;
+        const dy = touchEnd.y - touchStart.y;
+        
+        let newDirection: Direction | null = null;
+
+        const minSwipeDistance = 30; // Minimum distance for a swipe to be registered
+
+        // Check for horizontal vs. vertical swipe
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal swipe
+            if (Math.abs(dx) > minSwipeDistance) {
+              newDirection = dx > 0 ? Direction.RIGHT : Direction.LEFT;
+            }
+        } else {
+            // Vertical swipe
+          if (Math.abs(dy) > minSwipeDistance) {
+            newDirection = dy > 0 ? Direction.DOWN : Direction.UP;
+          }
+        }
+
+        if (newDirection && !isOppositeDirection(direction, newDirection)) {
+            setNextDirection(newDirection);
+        }
+
+        setTouchStart(null);
+  }, [touchStart, direction, gameStatus, startGame]);
+
   // Update high score in localStorage when it changes
   useEffect(() => {
     localStorage.setItem('snakeHighScore', highScore.toString());
@@ -82,8 +139,22 @@ export const useSnakeGame = () => {
   // Set up keyboard event listener
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleKeyPress]);
+
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (isTouchDevice) {
+        window.addEventListener('touchstart', handleTouchStart, { passive: false });
+        window.addEventListener('touchend', handleTouchEnd, { passive: false });
+      }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+      // --- Check if it's a touch device ---
+      if (isTouchDevice) {
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchend', handleTouchEnd);
+      }
+    };
+  }, [handleKeyPress, handleTouchEnd]);
 
   // Main game update function called each frame
   const updateGame = useCallback(() => {
@@ -130,16 +201,6 @@ export const useSnakeGame = () => {
     });
   }, [gameStatus, nextDirection, food, highScore]);
 
-  // Start new game
-  const startGame = useCallback(() => {
-    const initialSnake = getInitialSnake();
-    setSnake(initialSnake);
-    setDirection(Direction.RIGHT);
-    setNextDirection(Direction.RIGHT);
-    setFood(generateFoodPosition(initialSnake));
-    setScore(0);
-    setGameStatus(GameStatus.PLAYING);
-  }, []);
 
   // Pause game
   const pauseGame = useCallback(() => {
