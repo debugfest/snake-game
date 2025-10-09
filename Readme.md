@@ -49,7 +49,7 @@ A modern, interactive Snake Game built with Vite, featuring smooth animations, r
 ### 1. Clone the Repository
 
 ```bash
-git clone <YOUR_URL>
+git clone https://github.com/debugfest/snake-game.git
 cd snake-game
 ```
 
