@@ -1,10 +1,12 @@
-import { GameCanvas } from './components/GameCanvas';
-import { GameControls } from './components/GameControls';
-import { ScoreDisplay } from './components/ScoreDisplay';
-import { useSnakeGame } from './hooks/useSnakeGame';
-import { useGameLoop } from './hooks/useGameLoop';
-import { GameStatus } from './types/game';
-import { INITIAL_SPEED } from './utils/constants';
+import { GameCanvas } from "./components/GameCanvas";
+import { GameControls } from "./components/GameControls";
+import { ScoreDisplay } from "./components/ScoreDisplay";
+import { useSnakeGame } from "./hooks/useSnakeGame";
+import { useGameLoop } from "./hooks/useGameLoop";
+import { GameStatus } from "./types/game";
+import { INITIAL_SPEED, ThemeName, THEMES } from "./utils/constants";
+import { useEffect, useState } from "react";
+import { ThemeSelector } from "./components/ThemeSelector";
 
 function App() {
   const {
@@ -20,11 +22,31 @@ function App() {
     resetGame,
   } = useSnakeGame();
 
+  const [theme, setTheme] = useState<ThemeName>(
+    () => (localStorage.getItem("theme") as ThemeName) || "classic"
+  );
+
+  useEffect(() => {
+    const current = THEMES[theme];
+    Object.entries(current).forEach(([key, value]) => {
+      if (key !== "name") {
+        document.body.style.setProperty(`--${key}`, value as string);
+      }
+    });
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   // Game loop runs only when game is playing
   useGameLoop(updateGame, INITIAL_SPEED, gameStatus === GameStatus.PLAYING);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-8">
+    <div
+      className="min-h-screen flex items-center justify-center p-8 transition-colors duration-500"
+      style={{
+        backgroundColor: "var(--background)",
+        color: "var(--text)",
+      }}
+    >
       <div className="flex flex-col items-center gap-8">
         {/* Header */}
         <div className="text-center">
@@ -36,8 +58,13 @@ function App() {
           </p>
         </div>
 
+        <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
         {/* Score Display */}
-        <ScoreDisplay score={score} highScore={highScore} gameStatus={gameStatus} />
+        <ScoreDisplay
+          score={score}
+          highScore={highScore}
+          gameStatus={gameStatus}
+        />
 
         {/* Game Canvas */}
         <GameCanvas snake={snake} food={food} />
@@ -56,7 +83,9 @@ function App() {
           <h3 className="text-xl font-bold text-white mb-3">How to Play</h3>
           <ul className="space-y-2 text-sm">
             <li>• Control the snake using arrow keys or WASD</li>
-            <li>• Eat the yellow food to grow longer and increase your score</li>
+            <li>
+              • Eat the yellow food to grow longer and increase your score
+            </li>
             <li>• Avoid hitting the walls or yourself</li>
             <li>• Try to beat your high score!</li>
           </ul>
