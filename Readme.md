@@ -143,26 +143,6 @@ snake-game/
 | Wall Collision | Game Over | Reset to start screen |
 | Self Collision | Game Over | Reset to start screen |
 | Speed Increase | Every 50 points | Game becomes faster |
-
-## 🔧 Development
-
-### Available Scripts
-
-```bash
-# Start development server with HMR
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build locally
-npm run preview
-
-# Run linting
-npm run lint
-
-# Format code
-npm run format
 ```
 
 ### Vite Configuration
