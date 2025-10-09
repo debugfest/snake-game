@@ -18,6 +18,8 @@ function App() {
     pauseGame,
     resumeGame,
     resetGame,
+    isMuted,
+    toggleMute,
   } = useSnakeGame();
 
   // Game loop runs only when game is playing
@@ -49,6 +51,8 @@ function App() {
           onPause={pauseGame}
           onResume={resumeGame}
           onReset={resetGame}
+          isMuted={isMuted}
+          onToggleMute={toggleMute}
         />
 
         {/* Instructions */}

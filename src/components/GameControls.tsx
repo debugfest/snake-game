@@ -1,4 +1,4 @@
-import { Play, Pause, RotateCcw } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { GameStatus } from '../types/game';
 
 interface GameControlsProps {
@@ -7,6 +7,8 @@ interface GameControlsProps {
   onPause: () => void;
   onResume: () => void;
   onReset: () => void;
+  isMuted: boolean;
+  onToggleMute: () => void;
 }
 
 // Component for game control buttons
@@ -16,6 +18,8 @@ export const GameControls = ({
   onPause,
   onResume,
   onReset,
+  isMuted,
+  onToggleMute,
 }: GameControlsProps) => {
   const buttonBaseClasses =
     'px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg';
@@ -78,6 +82,14 @@ export const GameControls = ({
           Reset
         </button>
       )}
+      {/* --- ADD THE MUTE BUTTON --- */}
+      <button
+        onClick={onToggleMute}
+        className={`${buttonBaseClasses} bg-purple-600 hover:bg-purple-700`}
+        aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+      >
+        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+      </button>
     </div>
   );
 };
