@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --background: #1a1a2e;
+  --grid: #16213e;
+  --snake: #0f3460;
+  --snakeHead: #e94560;
+  --food: #f39c12;
+  --text: #ffffff;
+}
+
+body {
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
