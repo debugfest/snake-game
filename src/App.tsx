@@ -7,6 +7,7 @@ import { GameStatus } from "./types/game";
 import { INITIAL_SPEED, ThemeName, THEMES } from "./utils/constants";
 import { useEffect, useState } from "react";
 import { ThemeSelector } from "./components/ThemeSelector";
+import { GridSizeSelector } from "./components/GridSizeSelector";
 
 function App() {
   const {
@@ -15,11 +16,13 @@ function App() {
     score,
     highScore,
     gameStatus,
+    gridSize,
     updateGame,
     startGame,
     pauseGame,
     resumeGame,
     resetGame,
+    changeGridSize,
     isMuted,
     toggleMute,
   } = useSnakeGame();
@@ -60,7 +63,12 @@ function App() {
           </p>
         </div>
 
-        <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
+        {/* Settings Section */}
+        <div className="flex gap-6">
+          <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
+          <GridSizeSelector currentSize={gridSize} onSizeChange={changeGridSize} />
+        </div>
+
         {/* Score Display */}
         <ScoreDisplay
           score={score}
@@ -69,7 +77,7 @@ function App() {
         />
 
         {/* Game Canvas */}
-        <GameCanvas snake={snake} food={food} />
+        <GameCanvas snake={snake} food={food} gridSize={gridSize} />
 
         {/* Game Controls */}
         <GameControls

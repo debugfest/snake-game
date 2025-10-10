@@ -1,8 +1,17 @@
 // Game configuration constants
 
-export const GRID_SIZE = 20; // Number of cells in each dimension
+export const GRID_SIZES = {
+  small: 15,   // 15x15 grid (225 cells)
+  medium: 20,  // 20x20 grid (400 cells) - current default
+  large: 30    // 30x30 grid (900 cells)
+} as const;
+
+export type GridSize = keyof typeof GRID_SIZES;
+
 export const CELL_SIZE = 25; // Pixel size of each cell
-export const CANVAS_SIZE = GRID_SIZE * CELL_SIZE; // Total canvas size in pixels
+// Default to medium size
+export const DEFAULT_GRID_SIZE: GridSize = 'medium';
+export const GRID_SIZE = GRID_SIZES[DEFAULT_GRID_SIZE];
 
 export const INITIAL_SNAKE_LENGTH = 3;
 export const INITIAL_SPEED = 150; // Milliseconds per frame

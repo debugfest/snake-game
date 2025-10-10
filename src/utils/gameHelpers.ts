@@ -1,11 +1,11 @@
 import { Position, Direction } from '../types/game';
-import { GRID_SIZE } from './constants';
+import { GridSize, GRID_SIZES } from './constants';
 
 // Generate a random position on the grid
-export const generateRandomPosition = (): Position => {
+export const generateRandomPosition = (gridSize: number): Position => {
   return {
-    x: Math.floor(Math.random() * GRID_SIZE),
-    y: Math.floor(Math.random() * GRID_SIZE),
+    x: Math.floor(Math.random() * gridSize),
+    y: Math.floor(Math.random() * gridSize),
   };
 };
 
@@ -42,8 +42,8 @@ export const getNextPosition = (currentPos: Position, direction: Direction): Pos
 };
 
 // Check if the position is outside the grid boundaries
-export const isOutOfBounds = (position: Position): boolean => {
-  return position.x < 0 || position.x >= GRID_SIZE || position.y < 0 || position.y >= GRID_SIZE;
+export const isOutOfBounds = (position: Position, gridSize: number): boolean => {
+  return position.x < 0 || position.x >= gridSize || position.y < 0 || position.y >= gridSize;
 };
 
 // Get opposite direction (to prevent 180-degree turns)
@@ -57,11 +57,11 @@ export const isOppositeDirection = (current: Direction, next: Direction): boolea
 };
 
 // Generate food position that doesn't overlap with snake
-export const generateFoodPosition = (snake: Position[]): Position => {
+export const generateFoodPosition = (snake: Position[], gridSize: number): Position => {
   let foodPosition: Position;
 
   do {
-    foodPosition = generateRandomPosition();
+    foodPosition = generateRandomPosition(gridSize);
   } while (checkCollision(foodPosition, snake));
 
   return foodPosition;

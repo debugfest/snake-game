@@ -1,4 +1,5 @@
 // Game-related type definitions
+import { GridSize } from '../utils/constants';
 
 export interface Position {
   x: number;
@@ -26,4 +27,5 @@ export interface GameState {
   score: number;
   gameStatus: GameStatus;
   highScore: number;
+  gridSize: GridSize;
 }
