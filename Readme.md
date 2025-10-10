@@ -124,6 +124,7 @@ snake-game/
 ### Controls
 - **Arrow Keys**: Move snake (↑ ↓ ← →)
 - **WASD Keys**: Alternative movement controls
+- **Swipe Gestures**: Swipe up, down, left, or right on mobile
 - **Space Bar**: Pause/Resume game
 - **R Key**: Restart game
 
