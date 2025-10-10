@@ -11,6 +11,7 @@ A modern, interactive Snake Game built with Vite, featuring smooth animations, r
 ## 🌟 Features
 
 - **Classic Gameplay**: Traditional Snake mechanics with modern enhancements
+- **Multiple Grid Sizes**: Choose from Small (15×15), Medium (20×20), or Large (30×30) play areas
 - **Smooth Animations**: 60 FPS gameplay with fluid snake movement
 - **Responsive Controls**: Keyboard arrow keys and WASD support
 - **Score System**: Real-time score tracking with high score persistence
@@ -20,6 +21,11 @@ A modern, interactive Snake Game built with Vite, featuring smooth animations, r
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ## 🎯 Game Features
+
+### Play Area Sizes
+- **Small (15×15)**: Easy mode with more space to maneuver - perfect for beginners
+- **Medium (20×20)**: Balanced classic experience - the traditional Snake game feel
+- **Large (30×30)**: Hard mode with tight spaces requiring high skill and precision
 
 ### Core Mechanics
 - **🐍 Snake Movement**: Smooth directional controls with collision detection

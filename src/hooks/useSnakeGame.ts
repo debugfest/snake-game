@@ -7,7 +7,7 @@ import {
   checkCollision,
   isOppositeDirection,
 } from '../utils/gameHelpers';
-import { GRID_SIZE, INITIAL_SNAKE_LENGTH } from '../utils/constants';
+import { GridSize, GRID_SIZES, INITIAL_SNAKE_LENGTH } from '../utils/constants';
 
 //importing sound hook
 import { useSound } from './useSound';
@@ -16,10 +16,16 @@ import { useSound } from './useSound';
 export const useSnakeGame = () => {
   // Use the sound hook with cleaner names
   const { playEatSound, playGameOverSound, isMuted, toggleMute } = useSound();
+
+  const [gridSize, setGridSize] = useState<GridSize>(
+    () => (localStorage.getItem('gridSize') as GridSize) || 'medium'
+  );
+
   // Initialize snake in the center of the grid, moving right
-  const getInitialSnake = (): Position[] => {
-    const centerY = Math.floor(GRID_SIZE / 2);
-    const centerX = Math.floor(GRID_SIZE / 2);
+  const getInitialSnake = (currentGridSize: GridSize = gridSize): Position[] => {
+    const gridDimension = GRID_SIZES[currentGridSize];
+    const centerY = Math.floor(gridDimension / 2);
+    const centerX = Math.floor(gridDimension / 2);
     const snake: Position[] = [];
 
     for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
@@ -32,7 +38,7 @@ export const useSnakeGame = () => {
   const [snake, setSnake] = useState<Position[]>(getInitialSnake);
   const [direction, setDirection] = useState<Direction>(Direction.RIGHT);
   const [nextDirection, setNextDirection] = useState<Direction>(Direction.RIGHT);
-  const [food, setFood] = useState<Position>(() => generateFoodPosition(getInitialSnake()));
+  const [food, setFood] = useState<Position>(() => generateFoodPosition(getInitialSnake(), GRID_SIZES[gridSize]));
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem('snakeHighScore');
@@ -55,7 +61,7 @@ export const useSnakeGame = () => {
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
     setNextDirection(Direction.RIGHT);
-    setFood(generateFoodPosition(initialSnake));
+    setFood(generateFoodPosition(initialSnake, GRID_SIZES[gridSize]));
     setScore(0);
     setGameStatus(GameStatus.PLAYING);
   }, []);
@@ -161,32 +167,46 @@ export const useSnakeGame = () => {
     };
   }, [handleKeyPress, handleTouchEnd]);
 
+  const changeGridSize = useCallback((newSize: GridSize) => {
+    setGridSize(newSize);
+    localStorage.setItem('gridSize', newSize);
+    // Reset game with new grid size
+    const newSnake = getInitialSnake(newSize);
+    setSnake(newSnake);
+    setFood(generateFoodPosition(newSnake), GRID_SIZE[newSize]);
+    setScore(0);
+    setGameStatus(GameStatus.IDLE);
+  }, []);
+
   // Main game update function called each frame
   const updateGame = useCallback(() => {
     if (gameStatus !== GameStatus.PLAYING) return;
+
+    const currentGridSize = GRID_SIZES[gridSize];
 
     // Update direction from buffered input
     setDirection(nextDirection);
 
     setSnake((prevSnake) => {
-      const head = prevSnake[0];
+      const newSnake = [...prevSnake];
+      const head = newSnake[0];
       const newHead = getNextPosition(head, nextDirection);
 
       // Check for collisions with walls
-      if (isOutOfBounds(newHead)) {
+      if (isOutOfBounds(newHead, currentGridSize)) {
         playGameOverSound();
         setGameStatus(GameStatus.GAME_OVER);
         return prevSnake;
       }
 
       // Check for collisions with self
-      if (checkCollision(newHead, prevSnake)) {
+      if (checkCollision(newHead, newSnake)) {
         playGameOverSound();
         setGameStatus(GameStatus.GAME_OVER);
         return prevSnake;
       }
 
-      const newSnake = [newHead, ...prevSnake];
+      newSnake.unshift(newHead);
 
       // Check if snake ate food
       if (newHead.x === food.x && newHead.y === food.y) {
@@ -198,7 +218,7 @@ export const useSnakeGame = () => {
           }
           return newScore;
         });
-        setFood(generateFoodPosition(newSnake));
+        setFood(generateFoodPosition(newSnake, currentGridSize));
         // Snake grows, don't remove tail
         return newSnake;
       } else {
@@ -207,7 +227,7 @@ export const useSnakeGame = () => {
         return newSnake;
       }
     });
-  }, [gameStatus, nextDirection, food, highScore, playEatSound, playGameOverSound]);
+  }, [gameStatus, nextDirection, food, gridSize, highScore, playEatSound, playGameOverSound]);
 
 
   // Pause game
@@ -230,7 +250,7 @@ export const useSnakeGame = () => {
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
     setNextDirection(Direction.RIGHT);
-    setFood(generateFoodPosition(initialSnake));
+    setFood(generateFoodPosition(initialSnake, GRID_SIZES[gridSize]));
     setScore(0);
     setGameStatus(GameStatus.IDLE);
   }, []);
@@ -241,11 +261,13 @@ export const useSnakeGame = () => {
     score,
     highScore,
     gameStatus,
+    gridSize,
     updateGame,
     startGame,
     pauseGame,
     resumeGame,
     resetGame,
+    changeGridSize,
     isMuted,
     toggleMute,
   };

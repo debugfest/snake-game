@@ -1,15 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { Position } from '../types/game';
-import { CANVAS_SIZE, CELL_SIZE, COLORS } from '../utils/constants';
+import { CELL_SIZE, COLORS, GRID_SIZES, GridSize } from '../utils/constants';
 
 interface GameCanvasProps {
   snake: Position[];
   food: Position;
+  gridSize: GridSize;
 }
 
 // Component responsible for rendering the game on a canvas element
-export const GameCanvas = ({ snake, food }: GameCanvasProps) => {
+export const GameCanvas = ({ snake, food, gridSize }: GameCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const currentGridSize = GRID_SIZES[gridSize];
+  const CANVAS_SIZE = currentGridSize * CELL_SIZE;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -80,7 +83,7 @@ export const GameCanvas = ({ snake, food }: GameCanvasProps) => {
     ctx.arc(foodX, foodY, foodRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-  }, [snake, food]);
+  }, [snake, food, gridSize, CANVAS_SIZE]);
 
   return (
     <canvas
