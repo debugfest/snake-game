@@ -20,6 +20,8 @@ function App() {
     pauseGame,
     resumeGame,
     resetGame,
+    isMuted,
+    toggleMute,
   } = useSnakeGame();
 
   const [theme, setTheme] = useState<ThemeName>(
@@ -76,6 +78,8 @@ function App() {
           onPause={pauseGame}
           onResume={resumeGame}
           onReset={resetGame}
+          isMuted={isMuted}
+          onToggleMute={toggleMute}
         />
 
         {/* Instructions */}

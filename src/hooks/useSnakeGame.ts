@@ -9,8 +9,13 @@ import {
 } from '../utils/gameHelpers';
 import { GRID_SIZE, INITIAL_SNAKE_LENGTH } from '../utils/constants';
 
+//importing sound hook
+import { useSound } from './useSound';
+
 // Custom hook that manages all game state and logic
 export const useSnakeGame = () => {
+  // Use the sound hook with cleaner names
+  const { playEatSound, playGameOverSound, isMuted, toggleMute } = useSound();
   // Initialize snake in the center of the grid, moving right
   const getInitialSnake = (): Position[] => {
     const centerY = Math.floor(GRID_SIZE / 2);
@@ -169,12 +174,14 @@ export const useSnakeGame = () => {
 
       // Check for collisions with walls
       if (isOutOfBounds(newHead)) {
+        playGameOverSound();
         setGameStatus(GameStatus.GAME_OVER);
         return prevSnake;
       }
 
       // Check for collisions with self
       if (checkCollision(newHead, prevSnake)) {
+        playGameOverSound();
         setGameStatus(GameStatus.GAME_OVER);
         return prevSnake;
       }
@@ -183,6 +190,7 @@ export const useSnakeGame = () => {
 
       // Check if snake ate food
       if (newHead.x === food.x && newHead.y === food.y) {
+        playEatSound();
         setScore((prevScore) => {
           const newScore = prevScore + 10;
           if (newScore > highScore) {
@@ -199,7 +207,7 @@ export const useSnakeGame = () => {
         return newSnake;
       }
     });
-  }, [gameStatus, nextDirection, food, highScore]);
+  }, [gameStatus, nextDirection, food, highScore, playEatSound, playGameOverSound]);
 
 
   // Pause game
@@ -238,6 +246,8 @@ export const useSnakeGame = () => {
     pauseGame,
     resumeGame,
     resetGame,
+    isMuted,
+    toggleMute,
   };
 };
 
