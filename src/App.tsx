@@ -100,6 +100,8 @@ function App() {
             </li>
             <li>• Avoid hitting the walls or yourself</li>
             <li>• Try to beat your high score!</li>
+            <li>• Press the spacebar or click the Pause/Resume button to pause or resume the game</li>
+
           </ul>
         </div>
       </div>
