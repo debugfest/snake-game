@@ -1,22 +1,53 @@
-// Game configuration constants
-
+/**
+ * Game configuration constants for grid sizes.
+ * Defines available grid dimensions (width × height).
+ */
 export const GRID_SIZES = {
-  small: 15,   // 15x15 grid (225 cells)
-  medium: 20,  // 20x20 grid (400 cells) - current default
-  large: 30    // 30x30 grid (900 cells)
+  /** Small grid: 15×15 cells (225 total). */
+  small: 15,
+  /** Medium grid: 20×20 cells (400 total). Default size. */
+  medium: 20,
+  /** Large grid: 30×30 cells (900 total). */
+  large: 30,
 } as const;
 
+/**
+ * Union type for grid size keys: 'small' | 'medium' | 'large'.
+ */
 export type GridSize = keyof typeof GRID_SIZES;
 
-export const CELL_SIZE = 25; // Pixel size of each cell
-// Default to medium size
+/**
+ * Pixel size of each individual cell in the grid.
+ * Used to determine how large the game appears visually.
+ */
+export const CELL_SIZE = 25;
+
+/**
+ * Default grid size setting.
+ * This can be changed dynamically by the player.
+ */
 export const DEFAULT_GRID_SIZE: GridSize = 'medium';
+
+/**
+ * Numeric grid dimension (based on DEFAULT_GRID_SIZE).
+ */
 export const GRID_SIZE = GRID_SIZES[DEFAULT_GRID_SIZE];
 
+/**
+ * The number of snake body segments at the start of a new game.
+ */
 export const INITIAL_SNAKE_LENGTH = 3;
-export const INITIAL_SPEED = 150; // Milliseconds per frame
 
-// Colors
+/**
+ * Initial game speed in milliseconds per frame.
+ * Lower values = faster game.
+ */
+export const INITIAL_SPEED = 150;
+
+/**
+ * Default color palette for classic gameplay.
+ * Used as a fallback when no theme is selected.
+ */
 export const COLORS = {
   background: "#1a1a2e",
   grid: "#16213e",
@@ -26,8 +57,10 @@ export const COLORS = {
   text: "#ffffff",
 };
 
-// TODO: Add difficulty levels that adjust INITIAL_SPEED
-// TODO: Add different color themes/skins
+/**
+ * Theme presets for different visual styles.
+ * Each theme defines its own colors for background, grid, snake, food, and text.
+ */
 export const THEMES = {
   classic: {
     name: "Classic",
@@ -66,5 +99,11 @@ export const THEMES = {
     text: "#f5f5f5",
   },
 };
+
+/**
+ * Union type for theme names: 'classic' | 'neon' | 'retro' | 'dark'.
+ */
 export type ThemeName = keyof typeof THEMES;
+
+// TODO: Add difficulty levels that adjust INITIAL_SPEED.
 // TODO: Add sound effect constants for eating, game over, etc.
