@@ -8,26 +8,41 @@ import {
   isOppositeDirection,
 } from '../utils/gameHelpers';
 import { GridSize, GRID_SIZES, INITIAL_SNAKE_LENGTH } from '../utils/constants';
-
-//importing sound hook
 import { useSound } from './useSound';
 
-// Custom hook that manages all game state and logic
+/**
+ * Custom hook that manages the full Snake Game logic and state.
+ * It handles:
+ * - Snake movement and direction control
+ * - Collision detection (wall and self)
+ * - Food spawning and scoring
+ * - Game lifecycle (start, pause, resume, reset)
+ * - Grid size selection and persistence
+ * - Sound effects for actions
+ *
+ * @returns {object} Game state and control functions
+ */
 export const useSnakeGame = () => {
-  // Use the sound hook with cleaner names
+  /** 🎵 Import the sound hook to manage audio actions */
   const { playEatSound, playGameOverSound, isMuted, toggleMute } = useSound();
 
+  /** 🧩 Grid size (small, medium, large) is stored and persisted in localStorage */
   const [gridSize, setGridSize] = useState<GridSize>(
     () => (localStorage.getItem('gridSize') as GridSize) || 'medium'
   );
 
-  // Initialize snake in the center of the grid, moving right
+  /**
+   * Creates the initial snake body at the center of the grid.
+   * @param {GridSize} currentGridSize - Grid size (small, medium, large)
+   * @returns {Position[]} Array of snake segment positions
+   */
   const getInitialSnake = (currentGridSize: GridSize = gridSize): Position[] => {
     const gridDimension = GRID_SIZES[currentGridSize];
     const centerY = Math.floor(gridDimension / 2);
     const centerX = Math.floor(gridDimension / 2);
     const snake: Position[] = [];
 
+    // Snake starts centered, facing right
     for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
       snake.push({ x: centerX - i, y: centerY });
     }
@@ -35,10 +50,13 @@ export const useSnakeGame = () => {
     return snake;
   };
 
+  /** Snake Game State */
   const [snake, setSnake] = useState<Position[]>(getInitialSnake);
   const [direction, setDirection] = useState<Direction>(Direction.RIGHT);
   const [nextDirection, setNextDirection] = useState<Direction>(Direction.RIGHT);
-  const [food, setFood] = useState<Position>(() => generateFoodPosition(getInitialSnake(), GRID_SIZES[gridSize]));
+  const [food, setFood] = useState<Position>(() =>
+    generateFoodPosition(getInitialSnake(), GRID_SIZES[gridSize])
+  );
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem('snakeHighScore');
@@ -46,16 +64,18 @@ export const useSnakeGame = () => {
   });
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.IDLE);
 
-
+  /** 📱 Touch support for mobile swiping */
   const [touchStart, setTouchStart] = useState<Position | null>(null);
-  
+
+  /**
+   * Stores the starting position of a touch to determine swipe direction.
+   */
   const handleTouchStart = (e: TouchEvent) => {
-        // Prevent screen scrolling when swiping
-        e.preventDefault();
-        setTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    e.preventDefault(); // Prevent scrolling
+    setTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
   };
 
-  // Start new game
+  /** Starts a new game session */
   const startGame = useCallback(() => {
     const initialSnake = getInitialSnake();
     setSnake(initialSnake);
@@ -66,49 +86,51 @@ export const useSnakeGame = () => {
     setGameStatus(GameStatus.PLAYING);
   }, []);
 
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
-        if(gameStatus === GameStatus.IDLE || gameStatus === GameStatus.GAME_OVER){
-          startGame();
-          setTouchStart(null);
-          return;
-        }
-        if (!touchStart || gameStatus !== GameStatus.PLAYING) return;
-
-        const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-        
-        const dx = touchEnd.x - touchStart.x;
-        const dy = touchEnd.y - touchStart.y;
-        
-        let newDirection: Direction | null = null;
-
-        const minSwipeDistance = 30; // Minimum distance for a swipe to be registered
-
-        // Check for horizontal vs. vertical swipe
-        if (Math.abs(dx) > Math.abs(dy)) {
-            // Horizontal swipe
-            if (Math.abs(dx) > minSwipeDistance) {
-              newDirection = dx > 0 ? Direction.RIGHT : Direction.LEFT;
-            }
-        } else {
-            // Vertical swipe
-          if (Math.abs(dy) > minSwipeDistance) {
-            newDirection = dy > 0 ? Direction.DOWN : Direction.UP;
-          }
-        }
-
-        if (newDirection && !isOppositeDirection(direction, newDirection)) {
-            setNextDirection(newDirection);
-        }
-
+  /**
+   * Handles the swipe gesture on mobile to change snake direction.
+   */
+  const handleTouchEnd = useCallback(
+    (e: TouchEvent) => {
+      // Allow starting a game via swipe
+      if (gameStatus === GameStatus.IDLE || gameStatus === GameStatus.GAME_OVER) {
+        startGame();
         setTouchStart(null);
-  }, [touchStart, direction, gameStatus, startGame]);
+        return;
+      }
+      if (!touchStart || gameStatus !== GameStatus.PLAYING) return;
 
-  // Update high score in localStorage when it changes
+      const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+      const dx = touchEnd.x - touchStart.x;
+      const dy = touchEnd.y - touchStart.y;
+      let newDirection: Direction | null = null;
+      const minSwipeDistance = 30;
+
+      // Horizontal or vertical swipe detection
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > minSwipeDistance)
+          newDirection = dx > 0 ? Direction.RIGHT : Direction.LEFT;
+      } else {
+        if (Math.abs(dy) > minSwipeDistance)
+          newDirection = dy > 0 ? Direction.DOWN : Direction.UP;
+      }
+
+      if (newDirection && !isOppositeDirection(direction, newDirection)) {
+        setNextDirection(newDirection);
+      }
+
+      setTouchStart(null);
+    },
+    [touchStart, direction, gameStatus, startGame]
+  );
+
+  /**  Persist high score in localStorage */
   useEffect(() => {
     localStorage.setItem('snakeHighScore', highScore.toString());
   }, [highScore]);
 
-  // Handle keyboard input for direction changes
+  /**
+   * Handles keyboard input for snake direction control.
+   */
   const handleKeyPress = useCallback(
     (event: KeyboardEvent) => {
       if (gameStatus !== GameStatus.PLAYING) return;
@@ -138,7 +160,7 @@ export const useSnakeGame = () => {
           break;
       }
 
-      // Prevent 180-degree turns
+      // Prevent 180° turns
       if (newDirection && !isOppositeDirection(direction, newDirection)) {
         setNextDirection(newDirection);
         event.preventDefault();
@@ -147,19 +169,18 @@ export const useSnakeGame = () => {
     [direction, gameStatus]
   );
 
-  // Set up keyboard event listener
+  /** Set up keyboard and touch listeners */
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
-
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      if (isTouchDevice) {
-        window.addEventListener('touchstart', handleTouchStart, { passive: false });
-        window.addEventListener('touchend', handleTouchEnd, { passive: false });
-      }
+
+    if (isTouchDevice) {
+      window.addEventListener('touchstart', handleTouchStart, { passive: false });
+      window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
 
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
-      // --- Check if it's a touch device ---
       if (isTouchDevice) {
         window.removeEventListener('touchstart', handleTouchStart);
         window.removeEventListener('touchend', handleTouchEnd);
@@ -167,40 +188,38 @@ export const useSnakeGame = () => {
     };
   }, [handleKeyPress, handleTouchEnd]);
 
+  /**
+   * Allows switching between grid sizes and resets the game.
+   */
   const changeGridSize = useCallback((newSize: GridSize) => {
     setGridSize(newSize);
     localStorage.setItem('gridSize', newSize);
-    // Reset game with new grid size
     const newSnake = getInitialSnake(newSize);
     setSnake(newSnake);
-    setFood(generateFoodPosition(newSnake), GRID_SIZE[newSize]);
+    setFood(generateFoodPosition(newSnake, GRID_SIZES[newSize]));
     setScore(0);
     setGameStatus(GameStatus.IDLE);
   }, []);
 
-  // Main game update function called each frame
+  /**
+   * Main game loop — called repeatedly to update the snake’s position.
+   * Handles:
+   * - Movement and direction updates
+   * - Wall and self collision detection
+   * - Food consumption and scoring
+   */
   const updateGame = useCallback(() => {
     if (gameStatus !== GameStatus.PLAYING) return;
-
     const currentGridSize = GRID_SIZES[gridSize];
 
-    // Update direction from buffered input
     setDirection(nextDirection);
-
     setSnake((prevSnake) => {
       const newSnake = [...prevSnake];
       const head = newSnake[0];
       const newHead = getNextPosition(head, nextDirection);
 
-      // Check for collisions with walls
-      if (isOutOfBounds(newHead, currentGridSize)) {
-        playGameOverSound();
-        setGameStatus(GameStatus.GAME_OVER);
-        return prevSnake;
-      }
-
-      // Check for collisions with self
-      if (checkCollision(newHead, newSnake)) {
+      // Collision checks
+      if (isOutOfBounds(newHead, currentGridSize) || checkCollision(newHead, newSnake)) {
         playGameOverSound();
         setGameStatus(GameStatus.GAME_OVER);
         return prevSnake;
@@ -208,43 +227,35 @@ export const useSnakeGame = () => {
 
       newSnake.unshift(newHead);
 
-      // Check if snake ate food
+      // Check food collision
       if (newHead.x === food.x && newHead.y === food.y) {
         playEatSound();
         setScore((prevScore) => {
           const newScore = prevScore + 10;
-          if (newScore > highScore) {
-            setHighScore(newScore);
-          }
+          if (newScore > highScore) setHighScore(newScore);
           return newScore;
         });
         setFood(generateFoodPosition(newSnake, currentGridSize));
-        // Snake grows, don't remove tail
         return newSnake;
       } else {
-        // Remove tail to maintain snake length
+        // Move normally
         newSnake.pop();
         return newSnake;
       }
     });
   }, [gameStatus, nextDirection, food, gridSize, highScore, playEatSound, playGameOverSound]);
 
-
-  // Pause game
+  /** Pauses gameplay */
   const pauseGame = useCallback(() => {
-    if (gameStatus === GameStatus.PLAYING) {
-      setGameStatus(GameStatus.PAUSED);
-    }
+    if (gameStatus === GameStatus.PLAYING) setGameStatus(GameStatus.PAUSED);
   }, [gameStatus]);
 
-  // Resume game
+  /** Resumes gameplay */
   const resumeGame = useCallback(() => {
-    if (gameStatus === GameStatus.PAUSED) {
-      setGameStatus(GameStatus.PLAYING);
-    }
+    if (gameStatus === GameStatus.PAUSED) setGameStatus(GameStatus.PLAYING);
   }, [gameStatus]);
 
-  // Reset game
+  /**Resets everything to the starting state */
   const resetGame = useCallback(() => {
     const initialSnake = getInitialSnake();
     setSnake(initialSnake);
@@ -273,8 +284,10 @@ export const useSnakeGame = () => {
   };
 };
 
-// TODO: Add power-ups (e.g., speed boost, invincibility, score multiplier)
-// TODO: Add obstacles that appear randomly on the grid
-// TODO: Add multiple difficulty levels with different speeds
-// TODO: Add special food types with different point values
-// TODO: Implement progressive speed increase as score grows
+// Future enhancements
+// - Add power-ups (speed boost, invincibility, score multiplier)
+// - Add obstacles or random barriers
+// - Implement multiple difficulty levels
+// - Introduce special food types with different points
+// - Gradually increase speed with score
+
