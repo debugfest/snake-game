@@ -6,10 +6,11 @@ interface GameCanvasProps {
   snake: Position[];
   food: Position;
   gridSize: GridSize;
+  snake2?: Position[];
 }
 
 // Component responsible for rendering the game on a canvas element
-export const GameCanvas = ({ snake, food, gridSize }: GameCanvasProps) => {
+export const GameCanvas = ({ snake, food, gridSize, snake2 }: GameCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentGridSize = GRID_SIZES[gridSize];
   const CANVAS_SIZE = currentGridSize * CELL_SIZE;
@@ -43,7 +44,7 @@ export const GameCanvas = ({ snake, food, gridSize }: GameCanvasProps) => {
       ctx.stroke();
     }
 
-    // Draw snake
+    // Draw snake (Player 1)
     snake.forEach((segment, index) => {
       // Head is drawn in a different color
       ctx.fillStyle = index === 0 ? COLORS.snakeHead : COLORS.snake;
@@ -65,6 +66,28 @@ export const GameCanvas = ({ snake, food, gridSize }: GameCanvasProps) => {
         ctx.fill();
       }
     });
+
+    // Draw second snake (Player 2) if present
+    if (snake2 && snake2.length > 0) {
+      snake2.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? (COLORS as any).snake2Head ?? '#16a085' : (COLORS as any).snake2 ?? '#1abc9c';
+
+        const x = segment.x * CELL_SIZE;
+        const y = segment.y * CELL_SIZE;
+
+        const radius = 4;
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, radius);
+        ctx.fill();
+
+        if (index === 0) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.beginPath();
+          ctx.roundRect(x + 4, y + 4, CELL_SIZE - 8, (CELL_SIZE - 8) / 2, radius);
+          ctx.fill();
+        }
+      });
+    }
 
     // Draw food as a circle
     ctx.fillStyle = COLORS.food;

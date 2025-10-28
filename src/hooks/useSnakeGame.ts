@@ -54,15 +54,22 @@ export const useSnakeGame = () => {
   const [snake, setSnake] = useState<Position[]>(getInitialSnake);
   const [direction, setDirection] = useState<Direction>(Direction.RIGHT);
   const [nextDirection, setNextDirection] = useState<Direction>(Direction.RIGHT);
+  // 2P state
+  const [isTwoPlayer, setIsTwoPlayer] = useState<boolean>(() => localStorage.getItem('twoPlayer') === 'true');
+  const [snake2, setSnake2] = useState<Position[]>(() => (isTwoPlayer ? getInitialSnake() : []));
+  const [direction2, setDirection2] = useState<Direction>(Direction.LEFT);
+  const [nextDirection2, setNextDirection2] = useState<Direction>(Direction.LEFT);
   const [food, setFood] = useState<Position>(() =>
     generateFoodPosition(getInitialSnake(), GRID_SIZES[gridSize])
   );
   const [score, setScore] = useState(0);
+  const [score2, setScore2] = useState(0);
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem('snakeHighScore');
     return saved ? parseInt(saved, 10) : 0;
   });
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.IDLE);
+  const [winner, setWinner] = useState<null | 'P1' | 'P2'>(null);
 
   /** 📱 Touch support for mobile swiping */
   const [touchStart, setTouchStart] = useState<Position | null>(null);
@@ -78,13 +85,32 @@ export const useSnakeGame = () => {
   /** Starts a new game session */
   const startGame = useCallback(() => {
     const initialSnake = getInitialSnake();
+    const gridDim = GRID_SIZES[gridSize];
+    // Player 2 starts mirrored if 2P
+    const centerY = Math.floor(gridDim / 2);
+    const centerX = Math.floor(gridDim / 2);
+    const initialSnake2: Position[] = [];
+    for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
+      initialSnake2.push({ x: centerX + i, y: centerY });
+    }
+
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
     setNextDirection(Direction.RIGHT);
-    setFood(generateFoodPosition(initialSnake, GRID_SIZES[gridSize]));
+    if (isTwoPlayer) {
+      setSnake2(initialSnake2);
+      setDirection2(Direction.LEFT);
+      setNextDirection2(Direction.LEFT);
+    } else {
+      setSnake2([]);
+    }
+    const taken = isTwoPlayer ? [...initialSnake, ...initialSnake2] : initialSnake;
+    setFood(generateFoodPosition(taken, GRID_SIZES[gridSize]));
     setScore(0);
+    setScore2(0);
+    setWinner(null);
     setGameStatus(GameStatus.PLAYING);
-  }, []);
+  }, [gridSize, isTwoPlayer]);
 
   /**
    * Handles the swipe gesture on mobile to change snake direction.
@@ -160,13 +186,38 @@ export const useSnakeGame = () => {
           break;
       }
 
+      // Player 2 controls (IJKL)
+      let newDirection2Local: Direction | null = null;
+      switch (event.key) {
+        case 'i':
+        case 'I':
+          newDirection2Local = Direction.UP;
+          break;
+        case 'k':
+        case 'K':
+          newDirection2Local = Direction.DOWN;
+          break;
+        case 'j':
+        case 'J':
+          newDirection2Local = Direction.LEFT;
+          break;
+        case 'l':
+        case 'L':
+          newDirection2Local = Direction.RIGHT;
+          break;
+      }
+
       // Prevent 180° turns
       if (newDirection && !isOppositeDirection(direction, newDirection)) {
         setNextDirection(newDirection);
         event.preventDefault();
       }
+      if (isTwoPlayer && newDirection2Local && !isOppositeDirection(direction2, newDirection2Local)) {
+        setNextDirection2(newDirection2Local);
+        event.preventDefault();
+      }
     },
-    [direction, gameStatus]
+    [direction, direction2, gameStatus, isTwoPlayer]
   );
 
   /** Set up keyboard and touch listeners */
@@ -196,10 +247,13 @@ export const useSnakeGame = () => {
     localStorage.setItem('gridSize', newSize);
     const newSnake = getInitialSnake(newSize);
     setSnake(newSnake);
-    setFood(generateFoodPosition(newSnake, GRID_SIZES[newSize]));
+    const taken = isTwoPlayer ? [...newSnake, ...getInitialSnake(newSize).map((s) => ({ ...s, x: s.x + 1 }))] : newSnake;
+    setFood(generateFoodPosition(taken, GRID_SIZES[newSize]));
     setScore(0);
+    setScore2(0);
     setGameStatus(GameStatus.IDLE);
-  }, []);
+    setWinner(null);
+  }, [isTwoPlayer]);
 
   /**
    * Main game loop — called repeatedly to update the snake’s position.
@@ -213,37 +267,98 @@ export const useSnakeGame = () => {
     const currentGridSize = GRID_SIZES[gridSize];
 
     setDirection(nextDirection);
+    if (isTwoPlayer) setDirection2(nextDirection2);
+
+    // Compute next heads first
+    let p1Died = false;
+    let p2Died = false;
+
     setSnake((prevSnake) => {
       const newSnake = [...prevSnake];
       const head = newSnake[0];
       const newHead = getNextPosition(head, nextDirection);
 
-      // Collision checks
-      if (isOutOfBounds(newHead, currentGridSize) || checkCollision(newHead, newSnake)) {
-        playGameOverSound();
-        setGameStatus(GameStatus.GAME_OVER);
+      // Check vs walls/self and other snake
+      const other = isTwoPlayer ? snake2 : [];
+      if (
+        isOutOfBounds(newHead, currentGridSize) ||
+        checkCollision(newHead, newSnake) ||
+        (isTwoPlayer && checkCollision(newHead, other))
+      ) {
+        p1Died = true;
         return prevSnake;
       }
 
       newSnake.unshift(newHead);
+      return newSnake;
+    });
 
-      // Check food collision
-      if (newHead.x === food.x && newHead.y === food.y) {
-        playEatSound();
-        setScore((prevScore) => {
-          const newScore = prevScore + 10;
-          if (newScore > highScore) setHighScore(newScore);
-          return newScore;
+    if (isTwoPlayer) {
+      setSnake2((prevSnake2) => {
+        const newSnake = [...prevSnake2];
+        const head = newSnake[0];
+        const newHead = getNextPosition(head, nextDirection2);
+        const other = snake; // latest from closure
+        if (
+          isOutOfBounds(newHead, currentGridSize) ||
+          checkCollision(newHead, newSnake) ||
+          checkCollision(newHead, other)
+        ) {
+          p2Died = true;
+          return prevSnake2;
+        }
+        newSnake.unshift(newHead);
+        return newSnake;
+      });
+    }
+
+    // Handle resolve after both snakes moved
+    setTimeout(() => {
+      if (p1Died || (isTwoPlayer && p2Died)) {
+        playGameOverSound();
+        setWinner(p1Died && p2Died ? null : p1Died ? 'P2' : 'P1');
+        setGameStatus(GameStatus.GAME_OVER);
+        return;
+      }
+
+      // Food consumption and tail popping
+      setSnake((prev) => {
+        const head = prev[0];
+        const ate = head.x === food.x && head.y === food.y;
+        if (ate) {
+          playEatSound();
+          setScore((s) => {
+            const ns = s + 10;
+            if (ns > highScore) setHighScore(ns);
+            return ns;
+          });
+        }
+        const next = ate ? [...prev] : [...prev.slice(0, prev.length - 1)];
+        return next;
+      });
+
+      if (isTwoPlayer) {
+        setSnake2((prev) => {
+          const head = prev[0];
+          const ate = head.x === food.x && head.y === food.y;
+          if (ate) {
+            playEatSound();
+            setScore2((s) => s + 10);
+          }
+          const next = ate ? [...prev] : [...prev.slice(0, prev.length - 1)];
+          return next;
         });
-        setFood(generateFoodPosition(newSnake, currentGridSize));
-        return newSnake;
-      } else {
-        // Move normally
-        newSnake.pop();
-        return newSnake;
+      }
+
+      // If any player ate, respawn food away from both snakes
+      const p1Ate = snake[0] && snake[0].x === food.x && snake[0].y === food.y;
+      const p2Ate = isTwoPlayer && snake2[0] && snake2[0].x === food.x && snake2[0].y === food.y;
+      if (p1Ate || p2Ate) {
+        const taken = isTwoPlayer ? [...snake, ...snake2] : [...snake];
+        setFood(generateFoodPosition(taken, currentGridSize));
       }
     });
-  }, [gameStatus, nextDirection, food, gridSize, highScore, playEatSound, playGameOverSound]);
+  }, [gameStatus, nextDirection, nextDirection2, food, gridSize, highScore, isTwoPlayer, snake, snake2, playEatSound, playGameOverSound]);
 
   /** Pauses gameplay */
   const pauseGame = useCallback(() => {
@@ -261,18 +376,47 @@ export const useSnakeGame = () => {
     setSnake(initialSnake);
     setDirection(Direction.RIGHT);
     setNextDirection(Direction.RIGHT);
-    setFood(generateFoodPosition(initialSnake, GRID_SIZES[gridSize]));
+    if (isTwoPlayer) {
+      const gridDim = GRID_SIZES[gridSize];
+      const centerY = Math.floor(gridDim / 2);
+      const centerX = Math.floor(gridDim / 2);
+      const initialSnake2: Position[] = [];
+      for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
+        initialSnake2.push({ x: centerX + i, y: centerY });
+      }
+      setSnake2(initialSnake2);
+      setDirection2(Direction.LEFT);
+      setNextDirection2(Direction.LEFT);
+      setFood(generateFoodPosition([...initialSnake, ...initialSnake2], GRID_SIZES[gridSize]));
+    } else {
+      setSnake2([]);
+      setFood(generateFoodPosition(initialSnake, GRID_SIZES[gridSize]));
+    }
     setScore(0);
+    setScore2(0);
     setGameStatus(GameStatus.IDLE);
+    setWinner(null);
+  }, [gridSize, isTwoPlayer]);
+
+  const toggleTwoPlayer = useCallback(() => {
+    setIsTwoPlayer((prev) => {
+      const next = !prev;
+      localStorage.setItem('twoPlayer', String(next));
+      return next;
+    });
   }, []);
 
   return {
     snake,
+    snake2,
     food,
     score,
+    score2,
     highScore,
     gameStatus,
     gridSize,
+    isTwoPlayer,
+    winner,
     updateGame,
     startGame,
     pauseGame,
@@ -281,6 +425,7 @@ export const useSnakeGame = () => {
     changeGridSize,
     isMuted,
     toggleMute,
+    toggleTwoPlayer,
   };
 };
 
