@@ -20,6 +20,11 @@ export enum GameStatus {
   GAME_OVER = 'GAME_OVER',
 }
 
+export enum GameMode {
+  SINGLE = 'SINGLE',
+  TWO_PLAYER = 'TWO_PLAYER',
+}
+
 export interface GameState {
   snake: Position[];
   food: Position;
@@ -28,4 +33,8 @@ export interface GameState {
   gameStatus: GameStatus;
   highScore: number;
   gridSize: GridSize;
+  // Optional 2P fields
+  snake2?: Position[];
+  direction2?: Direction;
+  score2?: number;
 }

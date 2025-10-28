@@ -12,8 +12,10 @@ import { GridSizeSelector } from "./components/GridSizeSelector";
 function App() {
   const {
     snake,
+    snake2,
     food,
     score,
+    score2,
     highScore,
     gameStatus,
     gridSize,
@@ -25,6 +27,9 @@ function App() {
     changeGridSize,
     isMuted,
     toggleMute,
+    isTwoPlayer,
+    toggleTwoPlayer,
+    winner,
   } = useSnakeGame();
 
   const [theme, setTheme] = useState<ThemeName>(
@@ -67,17 +72,32 @@ function App() {
         <div className="flex gap-6">
           <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
           <GridSizeSelector currentSize={gridSize} onSizeChange={changeGridSize} />
+          <div className="flex flex-col items-center gap-2">
+            <label className="text-white font-medium">Mode</label>
+            <button
+              onClick={toggleTwoPlayer}
+              className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                isTwoPlayer
+                  ? 'bg-purple-600 border-purple-500 text-white'
+                  : 'bg-gray-800 border-gray-600 text-gray-200'
+              }`}
+            >
+              {isTwoPlayer ? '2 Players' : '1 Player'}
+            </button>
+          </div>
         </div>
 
         {/* Score Display */}
         <ScoreDisplay
           score={score}
+          score2={isTwoPlayer ? score2 : undefined}
           highScore={highScore}
           gameStatus={gameStatus}
+          winner={winner}
         />
 
         {/* Game Canvas */}
-        <GameCanvas snake={snake} food={food} gridSize={gridSize} />
+        <GameCanvas snake={snake} snake2={isTwoPlayer ? snake2 : undefined} food={food} gridSize={gridSize} />
 
         {/* Game Controls */}
         <GameControls
@@ -101,6 +121,9 @@ function App() {
             <li>• Avoid hitting the walls or yourself</li>
             <li>• Try to beat your high score!</li>
             <li>• Press the spacebar or click the Pause/Resume button to pause or resume the game</li>
+            {isTwoPlayer && (
+              <li>• Player 2 uses I/J/K/L keys. First to crash loses.</li>
+            )}
 
           </ul>
         </div>
