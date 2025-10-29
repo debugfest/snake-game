@@ -1,35 +1,67 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 
-// Preload audio files for instant playback
-const eatSound = new Audio('/assets/sounds/eat.wav');
-const gameOverSound = new Audio('/assets/sounds/end.flac');
+/**
+ * 🎵 useSound Hook
+ * Handles sound effects (eat, game over) and mute toggling.
+ * Persists user preference for mute state in localStorage.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* 🔊 Preload Audio Files                                                    */
+/* -------------------------------------------------------------------------- */
+// Preload sound assets once for instant playback during gameplay.
+const eatSound = new Audio("/assets/sounds/eat.wav");
+const gameOverSound = new Audio("/assets/sounds/end.flac");
 
 export const useSound = () => {
-    const [isMuted, setIsMuted] = useState(() => {
-    return localStorage.getItem('isSoundMuted') === 'true';
-});
+  /* ------------------------------------------------------------------------ */
+  /* 🎚️ Sound State Management                                              */
+  /* ------------------------------------------------------------------------ */
 
-useEffect(() => {
-    localStorage.setItem('isSoundMuted', String(isMuted));
-}, [isMuted]);
+  // Initialize mute state from localStorage (default: not muted)
+  const [isMuted, setIsMuted] = useState(() => {
+    return localStorage.getItem("isSoundMuted") === "true";
+  });
 
-const toggleMute = useCallback(() => {
-    setIsMuted(prev => !prev);
-}, []);
+  // Persist mute preference to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("isSoundMuted", String(isMuted));
+  }, [isMuted]);
 
-const playEatSound = useCallback(() => {
+  /* ------------------------------------------------------------------------ */
+  /* 🎛️ Sound Control Functions                                             */
+  /* ------------------------------------------------------------------------ */
+
+  // Toggle mute state (on/off)
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => !prev);
+  }, []);
+
+  // Play eating sound effect (only if not muted)
+  const playEatSound = useCallback(() => {
     if (!isMuted) {
-        eatSound.currentTime = 0;
-        eatSound.play();
+      eatSound.currentTime = 0; // Restart sound if it's already playing
+      eatSound.play();
     }
-}, [isMuted]);
+  }, [isMuted]);
 
-const playGameOverSound = useCallback(() => {
+  // Play game over sound effect (only if not muted)
+  const playGameOverSound = useCallback(() => {
     if (!isMuted) {
-        gameOverSound.currentTime = 0;
-        gameOverSound.play();
+      gameOverSound.currentTime = 0;
+      gameOverSound.play();
     }
-}, [isMuted]);
+  }, [isMuted]);
 
-    return { isMuted, toggleMute, playEatSound, playGameOverSound };
+  /* ------------------------------------------------------------------------ */
+  /* 📦 Hook Return                                                         */
+  /* ------------------------------------------------------------------------ */
+
+  // Expose controls and state to consuming components
+  return {
+    isMuted,
+    toggleMute,
+    playEatSound,
+    playGameOverSound,
+  };
 };
