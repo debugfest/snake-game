@@ -1,6 +1,8 @@
-]# 🐍 Snake Game
+# 🐍 Snake Game
 
-A modern, interactive Snake Game built with Vite, featuring smooth animations, responsive controls, and classic arcade gameplay. Test your reflexes and aim for the highest score in this reimagined version of the timeless Snake game.Featuring fluid animations, responsive controls, and dynamic gameplay, this interactive version redefines the classic arcade challenge. Test your reflexes, chase high scores, and enjoy a smooth, fast-paced experience across any device.
+Snake Game (Vite Edition) is a modern, interactive remake of the timeless arcade classic. Built with Vite for lightning-fast performance, it delivers smooth animations, responsive controls, and fluid gameplay that feels natural on any screen size.
+
+With multiple grid sizes, theme presets, and scalable difficulty, this project combines nostalgia with modern web design principles. Whether you're chasing your next high score or exploring the code, this reimagined version of Snake showcases the beauty of clean, modular, and performance-driven game development on the web.
 
 [![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF.svg)](https://vitejs.dev)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E.svg)](https://javascript.info)
